@@ -10,7 +10,7 @@ from task import Figure8GravityTask
 
 def main():
     task = Figure8GravityTask()
-    mpc_cfg = MPCConfig()
+    mpc_cfg = SimpleMPCConfig()
 
     bayes_model = BayesianLinearRegressionDynamics(task=task)
     controller = ScenarioMPCController(task=task, cfg=mpc_cfg)

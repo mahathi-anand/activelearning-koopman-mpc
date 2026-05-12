@@ -1,7 +1,8 @@
-import numpy as np
+from imports import *
 
 class LinearSystem:
-    def __init__(self, A, B, name = "VanDerPol"):
+    def __init__(self, A, B, dt = 0.01, name = "VanDerPol"):
+        self.dt = dt #the time step evolution for the discrete time system
         self.A = A
         self.B = B
         self.n_x = A.shape[0]
@@ -31,10 +32,10 @@ class VanDerPolSystem:
 
     #system dynamics    
     def dynamics(self, x, u):
-        x1 = x[0] + self.dt * x[1]
-        x2 = x[1] + self.dt * (self.mu * (1 - x[0] ** 2) * x[1] - x[0] + u[0])
-        return np.array([x1, x2]).transpose()
-    
+        x0 = x[0] + self.dt * x[1]
+        x1 = x[1] + self.dt * (self.mu * (1 - x[0] ** 2) * x[1] - x[0] + u[0])
+        return np.array([x0, x1]).transpose()
+
     #simulate system if needed
     def simulate(self, x0, u_seq):
         x = x0
