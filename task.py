@@ -106,7 +106,7 @@ class KoopmanVanDerPolTask:
         # - prior fit: smaller dataset for Bayesian initialization
         # - eval fit: larger dataset for diagnostics
         self.A_lift_prior_fit, self.B_lift_prior_fit = self._fit_lifted_linear_model(
-            num_x0=10, num_x1=10, num_u=10
+            num_x0=2, num_x1=2, num_u=2
         )
         self.A_lift_eval_fit, self.B_lift_eval_fit = self._fit_lifted_linear_model(
             num_x0=10, num_x1=10, num_u=10
@@ -118,8 +118,8 @@ class KoopmanVanDerPolTask:
         # Priors for Bayesian learner.
         self.A_bayes_mean = self.A_lift_prior_fit.copy()
         self.B_bayes_mean = self.B_lift_prior_fit.copy()
-        self.A_bayes_std = 0.01 * np.abs(self.A_lift_prior_fit) + 0.
-        self.B_bayes_std = 0.01 * np.abs(self.B_lift_prior_fit) + 0.
+        self.A_bayes_std = 0.1 * np.abs(self.A_bayes_mean) + 0.1
+        self.B_bayes_std = 0.1 * np.abs(self.B_bayes_mean) + 0.1
         self.A_eval = self.A_lift_eval_fit.copy()
         self.B_eval = self.B_lift_eval_fit.copy()
 
@@ -141,7 +141,7 @@ class KoopmanVanDerPolTask:
         self.H_x_full = np.hstack([H_p, np.zeros((H_p.shape[0], self.n_x - 2))])
         self.h_p = h_p
 
-        self.x_init = self.reference_state(0)
+        self.x_init = self.observables(np.array([0.5, 0.5]))
 
     def dynamics(self, x_phys: np.ndarray, u: np.ndarray) -> np.ndarray:
         """Nonlinear Van der Pol dynamics in physical 2D coordinates."""
