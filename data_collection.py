@@ -12,8 +12,8 @@ def collect_data(system, N_data, state_range, control_range):
 
 
 if __name__ == "__main__":
-    system = VanDerPolSystem(mu=0.2, dt=0.01)
-    N_data = 500000
+    system = VanDerPolSystem(mu=1, dt=0.01)
+    N_data = 50000
     state_range = [-5,5]
     control_range = [-2, 2]
     x, u, x_plus = collect_data(system, N_data, state_range, control_range)

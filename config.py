@@ -76,7 +76,7 @@ class KoopmanVanDerPolConfig(SimpleMPCConfig):
    safety_bounds: tuple = (-3, 3) 
 
    #Input constraints if needed
-   u_max: np.ndarray = field(default_factory=lambda: None)
+   u_max: np.ndarray = field(default_factory=lambda: np.array([2.0]))
 
    #Setting up optimization matrices according to observable size 
    def __post_init__(self):

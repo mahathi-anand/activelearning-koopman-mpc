@@ -46,7 +46,7 @@ class VanDerPolSystem:
         return np.array(trajectory)
     
     def observables(self, x):
-        obs = np.array([x[0], x[1], x[0]**2, x[1]**2, x[0]**2*x[1]])
+        obs = np.array([x[0], x[1], x[0]**2, x[0]**2*x[1]])
         size = len(obs)
         return obs, size
 

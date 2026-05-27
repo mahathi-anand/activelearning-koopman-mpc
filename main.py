@@ -59,8 +59,10 @@ if __name__ == "__main__":
     #Scenario MPC - Online Step with Iterative Computation of Koopman Operator
     
     #configure the task
-    task = ReferenceTask(system = koopman_system)
-    mpc_config = KoopmanVanDerPolConfig(system = koopman_system, use_info_gain = True)
+    x_phys_init = np.random.uniform(-3, 3, size=(2,))  # physical initial state
+    x_init = original_system.observables(x_phys_init)[0]
+    task = ReferenceTask(system = koopman_system, prior_mean = 0.0, x_init = x_init, nonlinear_system = original_system)
+    mpc_config = KoopmanVanDerPolConfig(system = koopman_system, use_info_gain = True, num_applied_steps = 500)
     bayes_model = BayesianLRDynamics(system=koopman_system, task=task)
     controller = ScenarioMPC(task = task, config = mpc_config)
 

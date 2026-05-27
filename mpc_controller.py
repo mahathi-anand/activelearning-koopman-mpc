@@ -57,7 +57,7 @@ class ScenarioMPC:
                 ]
                 #State constraints with a small slack for feasibility
                 constraints += [
-                    self.cfg.H_x_full @ self.X[s][:, k] <= self.cfg.h_p + self.slack[s][:, k]
+                    self.cfg.H_x_full @ self.X[s][:, k] <= self.cfg.h_p #+ self.slack[s][:, k]
                 ]
                 #Tracking/State cost
                 tracking_cost += (1.0 / S) * cp.quad_form(
@@ -74,7 +74,7 @@ class ScenarioMPC:
             #Terminal state constraints and cost
             #State constraints with a small slack for feasibility
             constraints += [
-                self.cfg.H_x_full @ self.X[s][:, k] <= self.cfg.h_p + self.slack[s][:, k]
+                self.cfg.H_x_full @ self.X[s][:, k] <= self.cfg.h_p #+ self.slack[s][:, k]
             ]
             #tracking/state cost
             tracking_cost += (1.0 / S) * cp.quad_form(

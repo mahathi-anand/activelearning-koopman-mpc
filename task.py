@@ -21,6 +21,8 @@ class ReferenceTask:
                  system, 
                  noise_cov = 1e-2, 
                  prior_mean = 0.1, prior_std = 0.1, 
+                 x_init = None,
+                 nonlinear_system = None,
                  reference_fn = None):
         self.A_true = system.A.copy()
         self.B_true = system.B.copy()
@@ -31,6 +33,7 @@ class ReferenceTask:
         self.n_x = system.n_x
         self.n_u = system.n_u
         self.dt = system.dt if hasattr(system, "dt") else 0.01
+        self.nonlinear_system = nonlinear_system
 
         if noise_cov is None:
             self.process_noise_cov = np.diag([1e-2] * self.n_x)
@@ -44,6 +47,11 @@ class ReferenceTask:
         self.B_prior_mean = self.B_true.copy() + prior_mean
         self.A_prior_std = prior_std * np.abs(self.A_true) + prior_std
         self.B_prior_std = prior_std * np.abs(self.B_true) + prior_std
+
+        if x_init is None:
+            self.x_init = np.zeros(self.n_x)
+        else:
+            self.x_init = x_init
 
         #Reference trajectory function
         if reference_fn is None:
@@ -59,13 +67,17 @@ class ReferenceTask:
                     return reference_fn(step_idx)
 
             self.reference_state = reference_wrapper
-                    
-        self.x_init = np.random.uniform(self.plot_bounds[0], self.plot_bounds[1], size=self.n_x) if hasattr(self, "plot_bounds") else np.zeros(self.n_x)
-   
-    #True dynamics under disturbance
+                       
+
     def true_step(self, x: np.ndarray, u: np.ndarray, rng: np.random.Generator) -> np.ndarray:
         w = rng.multivariate_normal(np.zeros(self.n_x), self.process_noise_cov)
-        return self.A_true @ x + self.B_true @ u + w
+        if self.nonlinear_system is None:
+            return self.A_true @ x + self.B_true @ u + w
+        else:
+            x_true_next = self.nonlinear_system.dynamics(x, u)
+            obs_next = self.nonlinear_system.observables(x_true_next)[0]
+            return obs_next + w
+     
 
     #Define reference trajectories here. For example, a figure-8 reference:
     def fig_eight(self, step_idx: int) -> np.ndarray:
