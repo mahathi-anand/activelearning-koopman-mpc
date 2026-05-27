@@ -55,10 +55,10 @@ def plot_run(task, cfg, results):
 
     if len(us_true) > 0:
         t_u = np.arange(len(us_true))
-        ax_u.step(t_u, us_true[:, 0], where="post", label="ax")
-        ax_u.step(t_u, us_true[:, 1], where="post", label="ay")
-        ax_u.axhline(cfg.u_max[0], linestyle="--", linewidth=1.0)
-        ax_u.axhline(-cfg.u_max[0], linestyle="--", linewidth=1.0)
+        for i in range(us_true.shape[1]):
+            ax_u.step(t_u, us_true[:, i], where="post", label=f"u{i}")
+            ax_u.axhline(cfg.u_max[i], linestyle="--", linewidth=1.0, alpha=0.6)
+            ax_u.axhline(cfg.u_min[i], linestyle="--", linewidth=1.0, alpha=0.6)
         ax_u.set_title("Applied control inputs")
         ax_u.set_xlabel("time step")
         ax_u.set_ylabel("u")
@@ -67,18 +67,18 @@ def plot_run(task, cfg, results):
 
     if len(xs_true) > 0 and len(x_refs) > 0:
         t_x = np.arange(len(xs_true))
-        state_labels = ["px", "py"]
-        for i, label in enumerate(state_labels):
+        for i in range(xs_true.shape[1]):
+            label = f"x{i}"
             ax_x.plot(t_x, xs_true[:, i], linewidth=1.6, label=f"{label}")
             ax_x.plot(t_x, x_refs[:, i], "--", linewidth=1.2, alpha=0.8, label=f"{label}_ref")
-        ax_x.set_title("Position vs References")
+        ax_x.set_title("States vs References")
         ax_x.set_xlabel("time step")
-        ax_x.set_ylabel("position")
+        ax_x.set_ylabel("state value")
         ax_x.grid(True)
         ax_x.legend(ncol=2)
 
     if len(mu_history) > 0:
-        theta_true = np.hstack([task.A_true, task.B_true]).reshape(-1, order="F")
+        theta_true = np.hstack([task.A_eval, task.B_eval]).reshape(-1, order="F")
         theta_err = mu_history - theta_true.reshape(1, -1)
         t_e = np.arange(theta_err.shape[0])
 

@@ -17,11 +17,15 @@ class ScenarioMPCController:
         N = self.cfg.N
         S = self.cfg.S
         m_poly = self.task.H_x_full.shape[0]
+        s_min = np.asarray(self.cfg.s_min, dtype=float).reshape(-1)
+        s_max = np.asarray(self.cfg.s_max, dtype=float).reshape(-1)
+        u_min = np.asarray(self.cfg.u_min, dtype=float).reshape(-1)
+        u_max = np.asarray(self.cfg.u_max, dtype=float).reshape(-1)
 
         self.U = cp.Variable((self.n_u, N))
         self.X = [cp.Variable((self.n_x, N + 1)) for _ in range(S)]
         self.slack = [cp.Variable((m_poly, N + 1), nonneg=True) for _ in range(S)]
-        self.vel_slack = [cp.Variable((2, N + 1), nonneg=True) for _ in range(S)]
+        self.s_slack = [cp.Variable((self.n_x, N + 1), nonneg=True) for _ in range(S)]
 
         self.x0_param = cp.Parameter(self.n_x)
         self.ref_state_param = cp.Parameter((self.n_x, N + 1))
@@ -35,8 +39,8 @@ class ScenarioMPCController:
 
         for k in range(N):
             constraints += [
-                self.U[:, k] <= self.cfg.u_max,
-                self.U[:, k] >= -self.cfg.u_max,
+                self.U[:, k] <= u_max,
+                self.U[:, k] >= u_min,
             ]
             tracking_cost += cp.quad_form(self.U[:, k], self.cfg.R)
 
@@ -48,8 +52,8 @@ class ScenarioMPCController:
                     == self.A_params[s] @ self.X[s][:, k] + self.B_params[s] @ self.U[:, k]
                 ]
                 constraints += [
-                    self.X[s][2:, k] <= self.cfg.v_max + self.vel_slack[s][:, k],
-                    self.X[s][2:, k] >= -self.cfg.v_max - self.vel_slack[s][:, k],
+                    self.X[s][:, k] <= s_max + self.s_slack[s][:, k],
+                    self.X[s][:, k] >= s_min - self.s_slack[s][:, k],
                 ]
                 constraints += [
                     self.task.H_x_full @ self.X[s][:, k] <= self.task.h_p + self.slack[s][:, k]
@@ -59,7 +63,7 @@ class ScenarioMPCController:
                     self.X[s][:, k] - self.ref_state_param[:, k], self.cfg.Q
                 )
                 tracking_cost += (self.cfg.slack_weight / S) * cp.sum(self.slack[s][:, k])
-                tracking_cost += (self.cfg.velocity_slack_weight / S) * cp.sum(self.vel_slack[s][:, k])
+                tracking_cost += (self.cfg.slack_weight / S) * cp.sum(self.s_slack[s][:, k])
 
                 info_lin_reward += (1.0 / S) * (
                     cp.sum(cp.multiply(self.info_grad_params[s][:self.n_x, k], self.X[s][:, k]))
@@ -67,15 +71,15 @@ class ScenarioMPCController:
                 )
 
             constraints += [
-                self.X[s][2:, N] <= self.cfg.v_max + self.vel_slack[s][:, N],
-                self.X[s][2:, N] >= -self.cfg.v_max - self.vel_slack[s][:, N],
+                self.X[s][:, N] <= s_max + self.s_slack[s][:, N],
+                self.X[s][:, N] >= s_min - self.s_slack[s][:, N],
                 self.task.H_x_full @ self.X[s][:, N] <= self.task.h_p + self.slack[s][:, N],
             ]
             tracking_cost += (1.0 / S) * cp.quad_form(
                 self.X[s][:, N] - self.ref_state_param[:, N], self.cfg.Qf
             )
             tracking_cost += (self.cfg.slack_weight / S) * cp.sum(self.slack[s][:, N])
-            tracking_cost += (self.cfg.velocity_slack_weight / S) * cp.sum(self.vel_slack[s][:, N])
+            tracking_cost += (self.cfg.slack_weight / S) * cp.sum(self.s_slack[s][:, N])
 
         total_objective = (
             self.cfg.cost_weight * tracking_cost

@@ -16,8 +16,8 @@ class BayesianLinearRegressionDynamics:
         self.Sigma_w = task.process_noise_cov.copy()
         self.Sigma_w_inv = np.linalg.inv(self.Sigma_w)
 
-        self.mu = self.pack_theta(task.A_prior_mean, task.B_prior_mean)
-        theta_std = np.hstack([task.A_prior_std, task.B_prior_std]).reshape(-1, order="F")
+        self.mu = self.pack_theta(task.A_bayes_mean, task.B_bayes_mean)
+        theta_std = np.hstack([task.A_bayes_std, task.B_bayes_std]).reshape(-1, order="F")
         self.P = np.diag(np.maximum(theta_std**2, 1e-8))
 
     def pack_theta(self, A: np.ndarray, B: np.ndarray) -> np.ndarray:
